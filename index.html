@@ -139,6 +139,8 @@ h2{font:900 clamp(2.5rem,5.4vw,4.2rem)/1.08 var(--display);margin:0 0 14px}
 .term-bar .lights{display:flex;gap:7px}
 .term-bar .lights i{width:11px;height:11px;border-radius:50%;background:#4A4238;display:block}
 .term pre{margin:0;padding:22px 22px 26px;font:400 .9375rem/1.7 var(--mono);min-height:22.5em;white-space:pre-wrap;word-break:break-word}
+.term pre .ln{display:block;padding-left:2ch;text-indent:-2ch} /* hanging indent for wrapped lines */
+.term pre .todo{padding-left:6ch;text-indent:-4ch} /* indented 2ch, wraps under the task after "[ ] " */
 .term .p{color:#E7B86A}
 .term .ok{color:var(--term-ok)}
 .term .warn{color:#F08A5D}
@@ -281,6 +283,7 @@ dialog::backdrop{background:rgba(31,26,21,.6)}
 }
 @media (max-width: 480px){
   header.nav .btn{display:none} /* the hero repeats this CTA right below */
+  .term pre{font-size:.8125rem;padding:18px 16px 22px}
 }
 </style>
 </head>
@@ -371,7 +374,7 @@ dialog::backdrop{background:rgba(31,26,21,.6)}
       <div class="term">
         <div class="term-bar"><span class="lights" aria-hidden="true"><i></i><i></i><i></i></span><span>~/the-app — zsh</span><span aria-hidden="true"></span></div>
         <pre id="term" aria-hidden="true"><span class="p">$</span> servermore deploy --prod</pre>
-        <p class="sr-only">Terminal demo: running servermore deploy --prod. It detects your laptop, passes the tests on this machine, skips the container image because the container is the laptop, refuses to close 47 load-bearing browser tabs, packs the uncommitted changes, unplugs the charger, adds three layers of bubble wrap and books a courier. Then it prints a shipping label: Servermore Express, zone 1, from your desk at 127.0.0.1 to production, one laptop still warm, 4.8 kg including dependencies, courier D. Elivery, tracking number SM-4471-LOCALHOST, fragile, this side up.</p>
+        <p class="sr-only">Terminal demo: running servermore deploy --prod. It detects your laptop, passes the tests on this machine, skips the container image because the container is the laptop, notes 12 uncommitted files and 47 open tabs that ship as they are, books a courier for 14:40 and prints the shipping label on the hallway printer. Then it asks you to unplug the charger, stick the label on the lid and wrap the laptop in bubble wrap, ticking each off as it detects it, warns you not to close the lid, and reports the laptop ready for pickup with tracking number SM-4471-LOCALHOST.</p>
       </div>
       <div class="term-actions">
         <button class="btn small ghost" id="term-pause" hidden>Pause</button>
@@ -570,51 +573,47 @@ dialog::backdrop{background:rgba(31,26,21,.6)}
   var prompt = '<span class="p">$</span> ';
   var cursor = '<span class="cursor"></span>';
   var cmd = 'servermore deploy --prod';
+  // Only things a CLI could really do; each line shows the action, then its result.
   var steps = [
-    ['dim','Detecting environment… MacBook Pro (yours), 14", 3 stickers'],
-    ['','Running tests… <span class="ok">passed</span> <span class="dim">(on this machine)</span>'],
-    ['','Building container image… <span class="dim">skipped: the container is the laptop</span>'],
-    ['','Closing 47 browser tabs… <span class="warn">refused, tabs are load-bearing</span>'],
-    ['','Committing uncommitted changes… <span class="dim">no need, they\'re coming too</span>'],
-    ['','Unplugging charger… done'],
-    ['','Wrapping in bubble wrap… 3 layers'],
-    ['','Booking courier… <span class="ok">pickup today, 14:40</span>'],
-    ['ok','✓ Ready to ship. Printing label:']
+    ['Detecting machine', 'MacBook Pro (yours), 14", 3 stickers'],
+    ['Running tests', '<span class="ok">passed</span> <span class="dim">(on this machine)</span>'],
+    ['Building container image', '<span class="dim">skipped: the container is the laptop</span>'],
+    ['Checking git status', '12 uncommitted files <span class="dim">(they\'re coming too)</span>'],
+    ['Saving browser session', '47 tabs <span class="dim">(shipping as-is)</span>'],
+    ['Booking courier', '<span class="ok">pickup today, 14:40</span>'],
+    ['Sending label to printer "Hallway printer"', '<span class="ok">printed</span> <span class="dim">(job #4471, 4×6 in)</span>']
   ];
-  // 30 columns wide so it fits a 360px phone without wrapping
-  function row(text){ return '│ ' + text.padEnd(26) + ' │'; }
-  var rule = '─'.repeat(28);
-  var label = [
-    '┌' + rule + '┐',
-    row('SERVERMORE EXPRESS  ZONE 1'),
-    '├' + rule + '┤',
-    row('FROM  your desk, 127.0.0.1'),
-    row('TO    production'),
-    row('ITEM  1 laptop, still warm'),
-    row('WT    4.8 kg (incl. deps)'),
-    row('VIA   D. Elivery'),
-    '├' + rule + '┤',
-    row('║│║║│║│║║║│║│║║│║║║│║│║║│║'),
-    row('    SM-4471-LOCALHOST'),
-    '├' + rule + '┤',
-    row('FRAGILE · THIS SIDE UP').replace('FRAGILE', '<span class="warn">FRAGILE</span>'),
-    '└' + rule + '┘'
+  // The physical work is the user's; the CLI just waits until it can detect each one.
+  var todo = [
+    ['Unplug the charger', 'waiting for power change…', 'on battery, 98%'],
+    ['Stick the label on the lid', 'press Enter when done', '⏎ confirmed'],
+    ['Wrap it in bubble wrap', 'watching webcam…', 'webcam went dark, assuming wrapped']
   ];
-  function stepLine(s){
-    return '<span' + (s[0] ? ' class="' + s[0] + '"' : '') + '>' + (s[0] ? '' : '→ ') + s[1] + '</span>';
-  }
-  var lines = [prompt + cmd].concat(steps.map(stepLine), label);
-  var full = lines.join('\n') + '\n\n' + prompt + cursor;
+  function dim(t){ return '<span class="dim">— ' + t + '</span>'; }
+
+  // Each line is its own block so wrapped text hangs under its first word on phones.
+  function ln(html, cls){ return '<span class="ln' + (cls ? ' ' + cls : '') + '">' + (html || ' ') + '</span>'; }
 
   // Every frame of one deploy as [html, ms to hold it]; the player loops over them.
-  var frames = [];
-  for (var c = 0; c <= cmd.length; c++) frames.push([prompt + cmd.slice(0, c) + cursor, c ? 45 : 900]);
+  var frames = [], out = [ln(prompt + cmd)];
+  function snap(ms){ frames.push([out.join('') + ln(cursor), ms]); }
+  for (var c = 0; c <= cmd.length; c++) frames.push([ln(prompt + cmd.slice(0, c) + cursor), c ? 45 : 900]);
   frames[frames.length - 1][1] = 400;
-  for (var i = 1; i < lines.length; i++){
-    var isLabel = i > steps.length;
-    var nextIsOk = i === steps.length - 1;
-    frames.push([lines.slice(0, i + 1).join('\n') + '\n' + cursor, isLabel ? 70 : nextIsOk ? 900 : 520]);
-  }
+  steps.forEach(function(s){
+    out.push(ln('→ ' + s[0] + '…')); snap(s[0].indexOf('printer') > 0 ? 1400 : 450);
+    out[out.length - 1] = ln('→ ' + s[0] + '… ' + s[1]); snap(300);
+  });
+  out.push(ln(''), ln('<span class="p">Before the courier arrives:</span>'));
+  var first = out.length;
+  todo.forEach(function(t){ out.push(ln('[ ] ' + t[0], 'todo')); });
+  snap(700);
+  todo.forEach(function(t, i){
+    out[first + i] = ln('[ ] ' + t[0] + ' ' + dim(t[1]), 'todo'); snap(1800);
+    out[first + i] = ln('<span class="ok">[✓]</span> ' + t[0] + ' ' + dim(t[2]), 'todo'); snap(500);
+  });
+  out.push(ln(''), ln('<span class="warn">! Do not close the lid. Production sleeps with it.</span>')); snap(700);
+  out.push(ln('<span class="ok">✓ Ready for pickup at 14:40. Tracking: SM-4471-LOCALHOST</span>'));
+  var full = out.join('') + ln('') + ln(prompt + cursor);
   frames.push([full, 6000]);
 
   var f = 0, timer = null, onScreen = !('IntersectionObserver' in window), userPaused = false;
@@ -627,12 +626,12 @@ dialog::backdrop{background:rgba(31,26,21,.6)}
     if (run && !timer) tick();
     if (!run && timer){ clearTimeout(timer); timer = null; }
   }
-  // The finished output is the tallest frame; lock the terminal to it so the page doesn't jump each loop.
+  // Lock the terminal to its tallest frame so the page doesn't jump each loop.
   function lockHeight(){
-    var cur = term.innerHTML;
+    var cur = term.innerHTML, h = 0;
     term.style.minHeight = '';
-    term.innerHTML = full;
-    term.style.minHeight = term.offsetHeight + 'px';
+    frames.forEach(function(fr){ term.innerHTML = fr[0]; h = Math.max(h, term.offsetHeight); });
+    term.style.minHeight = h + 'px';
     term.innerHTML = cur;
   }
   lockHeight();
