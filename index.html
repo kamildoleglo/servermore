@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Servermore — it works on your machine, so we ship your machine</title>
+<meta name="description" content="Serverless was a mistake. Servermore ships your actual laptop to every customer. Guaranteed dev/prod parity, because they are the same machine.">
+<meta property="og:title" content="Servermore — we ship your machine">
+<meta property="og:description" content="It works on your machine. So we ship your machine. Zero cold starts: the laptop is still warm.">
+<meta property="og:url" content="https://serverinsteadof.cloud/">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#B98E55">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400&family=JetBrains+Mono:wght@400;700&family=Libre+Barcode+39+Text&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --kraft:#B98E55;
+  --kraft-light:#CBA570;
+  --kraft-dark:#8E6A3A;
+  --paper:#FBF8F1;
+  --ink:#1F1A15;
+  --stamp:#C4161C;
+  --tape:rgba(236,224,186,.72);
+  --term:#16130F;
+  --term-text:#E9E2D2;
+  --term-ok:#9BD07A;
+  --display:"Big Shoulders Stencil Display", Impact, "Arial Narrow", sans-serif;
+  --body:"Archivo", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{
+  margin:0;
+  color:var(--ink);
+  font:400 1.0625rem/1.55 var(--body);
+  font-variation-settings:"wdth" 100;
+  background-color:var(--kraft);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .24 0 0 0 0 .1 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 2px, transparent 2px 9px);
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--stamp);outline-offset:3px}
+.wrap{max-width:1440px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
+
+/* status strip */
+.status{background:var(--ink);color:var(--paper);font:500 .875rem/1.4 var(--body);padding:8px 0}
+.status .wrap{display:flex;gap:10px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#7CC35A;flex:none;box-shadow:0 0 0 3px rgba(124,195,90,.25)}
+.status a{color:var(--paper);text-underline-offset:3px}
+
+/* nav */
+header.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:18px;padding-bottom:18px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:900 2rem/1 var(--display);letter-spacing:.01em}
+.logo svg{width:36px;height:36px}
+nav ul{list-style:none;display:flex;gap:26px;margin:0;padding:0;font-weight:600}
+nav a{text-decoration:none}
+nav a:hover{text-decoration:underline;text-underline-offset:4px}
+.btn{
+  display:inline-block;font:700 1rem/1 var(--body);font-variation-settings:"wdth" 110;
+  background:var(--ink);color:var(--paper);border:2px solid var(--ink);
+  padding:14px 22px;border-radius:3px;cursor:pointer;text-decoration:none;white-space:nowrap;
+  box-shadow:4px 4px 0 var(--kraft-dark);
+}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--kraft-dark)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--kraft-dark)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none}
+.btn.ghost:hover{background:rgba(255,255,255,.18)}
+.btn.small{padding:10px 16px;font-size:.9375rem}
+
+/* hero */
+.hero{padding:40px 0 90px;position:relative;overflow-x:clip} /* the stamp starts at 2.4x scale */
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:56px;align-items:center}
+.hero h1{
+  font:900 clamp(3.4rem, min(6.6vw, 10.4vh), 7.4rem)/1.1 var(--display); /* vh keeps the CTA above the fold on short laptops */ /* y descender + cap S = 1.02em, plus the outline stroke; tighter overlaps */
+  margin:0 0 26px;letter-spacing:-.005em;
+  color:var(--ink);
+}
+.hero h1 span{display:block}
+.hero h1 .so{color:transparent;-webkit-text-stroke:2px var(--ink)}
+.lede{font-size:1.25rem;max-width:34em;margin:0 0 32px}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap}
+
+/* shipping label */
+.label-wrap{position:relative;justify-self:center;width:100%;max-width:420px}
+.label{
+  position:relative;background:var(--paper);border:2px solid var(--ink);
+  transform:rotate(2.2deg);box-shadow:0 18px 30px -18px rgba(40,25,5,.55);
+  font-size:.9375rem;
+}
+.label::before,.label::after{ /* packing tape */
+  content:"";position:absolute;width:120px;height:34px;background:var(--tape);
+  box-shadow:0 1px 2px rgba(0,0,0,.12);
+}
+.label::before{top:-16px;left:-30px;transform:rotate(-38deg)}
+.label::after{bottom:-14px;right:-34px;transform:rotate(-34deg)}
+.label .row{border-bottom:2px solid var(--ink);padding:12px 16px}
+.label .row:last-child{border-bottom:0}
+.label .split{display:grid;grid-template-columns:1fr 1fr;padding:0}
+.label .split > div{padding:12px 16px}
+.label .split > div + div{border-left:2px solid var(--ink)}
+.f{font:700 .75rem/1.2 var(--body);font-variation-settings:"wdth" 120;letter-spacing:.06em;margin:0 0 4px}
+.v{margin:0;font-weight:600;line-height:1.3}
+.v small{display:block;font-weight:400;font-size:.8125rem}
+.big-svc{display:flex;justify-content:space-between;align-items:center}
+.big-svc .svc{font:900 3.4rem/1 var(--display)}
+.big-svc .zone{width:72px;height:72px;background:var(--ink);color:var(--paper);display:grid;place-items:center;font:900 2.6rem/1 var(--display)}
+.barcode{font:400 clamp(2.2rem,9vw,3.1rem)/1 "Libre Barcode 39 Text", monospace;text-align:center;margin:4px 0 0;white-space:nowrap;overflow:hidden}
+.stamp{
+  position:absolute;right:-4px;top:-30px; /* straddles the label's top edge, clear of the text */
+  font:900 2.3rem/1 var(--display);color:var(--stamp);
+  border:4px solid var(--stamp);padding:8px 14px 6px;border-radius:4px;
+  transform:rotate(-14deg);text-align:center;letter-spacing:.02em;
+  mix-blend-mode:multiply;opacity:.88;background:transparent;
+}
+.stamp small{display:block;font:800 .75rem/1.2 var(--body);letter-spacing:.04em}
+@media (prefers-reduced-motion: no-preference){
+  .stamp{animation:slam .5s cubic-bezier(.2,1.6,.4,1) .7s both}
+  @keyframes slam{0%{opacity:0;transform:rotate(-14deg) scale(2.4)}100%{opacity:.88;transform:rotate(-14deg) scale(1)}}
+}
+
+/* sections */
+section{padding:80px 0}
+.sec-head{max-width:640px;margin-bottom:40px}
+h2{font:900 clamp(2.5rem,5.4vw,4.2rem)/1.08 var(--display);margin:0 0 14px}
+.sec-head p{margin:0;font-size:1.125rem}
+
+/* terminal */
+.term{
+  background:var(--term);color:var(--term-text);border-radius:8px;
+  box-shadow:0 24px 40px -24px rgba(30,15,0,.7);overflow:hidden;
+}
+.term-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#25201A;font:400 .8125rem/1 var(--mono);color:#A89E8C}
+.term-bar .lights{display:flex;gap:7px}
+.term-bar .lights i{width:11px;height:11px;border-radius:50%;background:#4A4238;display:block}
+.term pre{margin:0;padding:22px 22px 26px;font:400 .9375rem/1.7 var(--mono);min-height:22.5em;white-space:pre-wrap;word-break:break-word}
+.term .p{color:#E7B86A}
+.term .ok{color:var(--term-ok)}
+.term .warn{color:#F08A5D}
+.term .dim{color:#8D8475}
+.term-actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cursor{display:inline-block;width:.6em;height:1.1em;background:var(--term-text);vertical-align:-.18em;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.cursor{animation:none}}
+
+/* comparison */
+.paper{background:var(--paper);border:2px solid var(--ink)}
+table{width:100%;border-collapse:collapse}
+.compare th,.compare td{text-align:left;vertical-align:top;padding:16px 18px;border-bottom:1.5px solid rgba(31,26,21,.22)}
+.compare thead th{border-bottom:2px solid var(--ink);font:900 1.75rem/1 var(--display)}
+.compare thead th:nth-child(3){background:var(--ink);color:var(--paper)}
+.compare tbody th{font-weight:700;width:22%}
+.compare td:nth-child(2){color:#5C5145}
+.compare td:nth-child(3){font-weight:600;background:rgba(185,142,85,.12)}
+.compare tr:last-child th,.compare tr:last-child td{border-bottom:0}
+
+/* customs declaration */
+.customs,.faq-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:48px;align-items:start}
+.customs .sec-head,.faq-layout .sec-head{margin-bottom:0}
+.decl{position:relative}
+.decl-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:2px solid var(--ink);padding:14px 18px}
+.decl-head strong{font:900 1.6rem/1 var(--display)}
+.decl-head span{font:400 .8125rem/1.3 var(--mono);white-space:nowrap}
+.decl table th{font:700 .75rem/1.2 var(--body);font-variation-settings:"wdth" 120;letter-spacing:.06em;text-align:left;padding:10px 18px;border-bottom:2px solid var(--ink)}
+.decl table td{padding:12px 18px;border-bottom:1px dashed rgba(31,26,21,.35)}
+.decl table td:nth-child(2){font:700 1rem/1.2 var(--mono);text-align:right;width:4.5em}
+.decl table th:nth-child(2){text-align:right}
+.decl table td:nth-child(3){width:38%}
+.decl table tr:last-child td{border-bottom:0}
+.decl .sign{border-top:2px solid var(--ink);padding:14px 18px;display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap}
+.signature{font:italic 400 1.6rem/1 "Archivo";font-variation-settings:"wdth" 62;transform:rotate(-3deg);display:inline-block;border-bottom:1px solid var(--ink);padding:0 18px 2px 4px}
+
+/* tracking timeline */
+.track{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);position:relative}
+.track::before{content:"";position:absolute;left:10%;right:10%;top:17px;height:4px;background:repeating-linear-gradient(90deg,var(--ink) 0 14px,transparent 14px 22px)}
+.track li{position:relative;padding:0 12px;text-align:center}
+.track .node{width:38px;height:38px;border-radius:50%;margin:0 auto 16px;background:var(--paper);border:3px solid var(--ink);display:grid;place-items:center;position:relative;z-index:1;font:900 1.1rem/1 var(--display)}
+.track li:last-child .node{background:var(--ink);color:var(--paper)}
+.track h3{font:800 1.125rem/1.2 var(--body);margin:0 0 6px}
+.track time{display:block;font:400 .8125rem/1.3 var(--mono);margin-bottom:8px}
+.track p{margin:0;font-size:.9375rem}
+
+/* pricing */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:stretch}
+.tier{background:var(--paper);border:2px solid var(--ink);display:flex;flex-direction:column}
+.tier:nth-child(1){transform:rotate(-1deg)}
+.tier:nth-child(3){transform:rotate(1.2deg)}
+.tier .t-top{border-bottom:2px solid var(--ink);padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.tier .t-top strong{font:900 2.2rem/1 var(--display)}
+.tier .t-top span{font:700 .75rem/1.2 var(--body);letter-spacing:.06em;border:2px solid var(--ink);padding:4px 7px}
+.tier .t-body{padding:18px 20px;flex:1}
+.tier .what{font-weight:700;font-size:1.125rem;margin:0 0 4px}
+.price{font:900 3rem/1 var(--display);margin:14px 0 4px}
+.price small{font:500 .9375rem var(--body)}
+.tier ul{margin:14px 0 0;padding-left:1.1em}
+.tier li{margin:6px 0}
+.tier .t-foot{border-top:2px solid var(--ink);padding:16px 20px}
+.tier.featured{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tier.featured .t-top,.tier.featured .t-foot{border-color:var(--paper)}
+.tier.featured .t-top span{border-color:var(--paper)}
+.tier.featured .btn{background:var(--paper);color:var(--ink);border-color:var(--paper);box-shadow:4px 4px 0 var(--stamp)}
+
+/* reviews */
+.reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.review{margin:0;background:var(--paper);padding:22px 22px 18px;border:2px solid var(--ink);position:relative}
+.review:nth-child(2){transform:rotate(.8deg) translateY(12px)}
+.review blockquote{margin:0 0 14px;font-size:1.0625rem}
+.review figcaption{font-size:.875rem}
+.review figcaption b{display:block;font-size:.9375rem}
+.stars{color:var(--stamp);letter-spacing:2px;font-size:1rem;margin-bottom:8px}
+
+/* faq */
+.faq details{border-top:2px solid var(--ink)}
+.faq details:last-child{border-bottom:2px solid var(--ink)}
+.faq summary{cursor:pointer;list-style:none;padding:18px 40px 18px 0;font:800 1.25rem/1.3 var(--body);position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:4px;top:12px;font:900 2rem/1 var(--display)}
+.faq details[open] summary::after{content:"–"}
+.faq details p{margin:0 0 20px;max-width:62ch}
+
+/* closing */
+.closing{text-align:center;padding:100px 0 110px}
+.closing h2{font-size:clamp(3rem,7vw,6rem);margin-bottom:18px}
+.closing p{font-size:1.2rem;margin:0 auto 30px;max-width:30em}
+
+footer{background:var(--ink);color:#D9CFBE;padding:34px 0;font-size:.9375rem}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer p{margin:0}
+
+/* dialog */
+dialog{border:2px solid var(--ink);padding:0;background:var(--paper);color:var(--ink);max-width:min(480px, calc(100vw - 32px));width:100%;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(31,26,21,.6)}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--ink);padding:14px 20px}
+.dlg-head h2{font-size:2.2rem;margin:0}
+.x{background:none;border:0;font:900 2rem/1 var(--display);cursor:pointer;color:var(--ink);padding:4px 8px}
+.dlg-body{padding:20px}
+.dlg-body label{display:flex;gap:12px;align-items:flex-start;margin:0 0 14px;cursor:pointer}
+.dlg-body input[type=checkbox]{width:20px;height:20px;accent-color:var(--ink);margin:2px 0 0;flex:none}
+.dlg-body .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.dlg-body .hint{font-size:.875rem;color:#5C5145;margin:10px 0 0}
+.booked .tn{font:400 clamp(1.6rem,8vw,2.4rem)/1 "Libre Barcode 39 Text";margin:10px 0 18px;white-space:nowrap;overflow:hidden}
+.booked:focus{outline:none}
+
+/* responsive */
+@media (min-width: 1600px){
+  .label-wrap{max-width:500px}
+}
+@media (max-width: 920px){
+  .hero .wrap{grid-template-columns:minmax(0,1fr);gap:56px}
+  .label-wrap{max-width:400px}
+  .customs,.faq-layout{grid-template-columns:1fr;gap:40px} /* same as .sec-head's margin elsewhere */
+  .tiers,.reviews{grid-template-columns:1fr;max-width:480px}
+  .tier:nth-child(n),.review:nth-child(n){transform:none}
+  .track{grid-template-columns:1fr;gap:26px}
+  .track::before{left:17px;right:auto;top:10px;bottom:10px;width:4px;height:auto;background:repeating-linear-gradient(180deg,var(--ink) 0 14px,transparent 14px 22px)}
+  .track li{display:grid;grid-template-columns:38px 1fr;column-gap:18px;text-align:left;padding:0}
+  .track .node{margin:0;grid-row:span 3}
+}
+@media (max-width: 720px){
+  nav ul{display:none}
+  section{padding:60px 0}
+  .compare thead{display:none}
+  .compare tr{display:block;border-bottom:2px solid var(--ink);padding:14px 0}
+  .compare tr:last-child{border-bottom:0}
+  .compare th,.compare td{display:block;border:0;padding:4px 16px;width:auto}
+  .compare tbody th{font:900 1.5rem/1.1 var(--display);width:auto}
+  .compare td:nth-child(2)::before{content:"Serverless: ";font-weight:700}
+  .compare td:nth-child(3)::before{content:"Servermore: ";font-weight:800}
+  .compare td:nth-child(3){background:none}
+  .decl table td:nth-child(3){width:auto}
+  .decl table th,.decl table td{padding-left:12px;padding-right:12px}
+  .stamp{font-size:1.6rem}
+  .label::after{right:-10px}
+  .label::before{left:-14px}
+}
+@media (max-width: 480px){
+  header.nav .btn{display:none} /* the hero repeats this CTA right below */
+}
+</style>
+</head>
+<body>
+
+<div class="status" role="status">
+  <div class="wrap"><span class="dot" aria-hidden="true"></span><span>All machines operational. Dave's MacBook is degraded: he closed the lid. <a href="#faq">Incident notes</a></span></div>
+</div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Servermore home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 20 32 8l24 12v26L32 58 8 46Z" fill="#CBA570" stroke="#1F1A15" stroke-width="4" stroke-linejoin="round"/><path d="M8 20l24 12 24-12M32 32v26" fill="none" stroke="#1F1A15" stroke-width="4" stroke-linejoin="round"/><path d="m20 14 24 12v8" fill="none" stroke="#1F1A15" stroke-width="4"/></svg>
+      Servermore
+    </a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="#deploy">Deploy</a></li>
+        <li><a href="#compare">Compare</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+    <button class="btn small" data-ship>Ship my machine</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <h1><span>It works on</span><span>your machine.</span><span class="so">So we ship</span><span>your machine.</span></h1>
+        <p class="lede">Serverless took the server away. Servermore puts it back, on your customer's desk. We unplug the laptop that runs your code, wrap it in bubble wrap and deliver it to production. Dev and prod are identical, because they're the same machine.</p>
+        <div class="cta-row">
+          <button class="btn" data-ship>Ship my machine</button>
+          <a class="btn ghost" href="#deploy">Watch a deploy</a>
+        </div>
+      </div>
+
+      <div class="label-wrap">
+        <div class="label" role="group" aria-label="Example shipping label">
+          <div class="row big-svc">
+            <div>
+              <p class="f">SERVICE</p>
+              <p class="svc">PROD</p>
+            </div>
+            <div class="zone" role="img" aria-label="Zone 1">1</div>
+          </div>
+          <div class="split row">
+            <div>
+              <p class="f">FROM</p>
+              <p class="v">Your desk<small>127.0.0.1, by the window</small></p>
+            </div>
+            <div>
+              <p class="f">TO</p>
+              <p class="v">Production<small>Customer's desk, near an outlet</small></p>
+            </div>
+          </div>
+          <div class="row">
+            <p class="f">CONTENTS</p>
+            <p class="v">1 laptop, still warm. Uncommitted changes included.</p>
+          </div>
+          <div class="split row">
+            <div>
+              <p class="f">WEIGHT</p>
+              <p class="v">1.6 kg<small>+ 3.2 kg node_modules</small></p>
+            </div>
+            <div>
+              <p class="f">HANDLING</p>
+              <p class="v">This side up<small>Keyboard facing sky</small></p>
+            </div>
+          </div>
+          <div class="row">
+            <p class="barcode" role="img" aria-label="Tracking number SM 4471 LOCALHOST">*SM4471LOCALHOST*</p>
+          </div>
+        </div>
+        <div class="stamp" aria-hidden="true">FRAGILE<small>WORKS ON MY MACHINE</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="deploy">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>One command. Three to five business days.</h2>
+        <p>No containers, no images, no reproducible builds. The build is reproducible because we ship the thing that built it.</p>
+      </div>
+      <div class="term">
+        <div class="term-bar"><span class="lights" aria-hidden="true"><i></i><i></i><i></i></span><span>~/the-app — zsh</span><span aria-hidden="true"></span></div>
+        <pre id="term" aria-hidden="true"><span class="p">$</span> servermore deploy --prod</pre>
+        <p class="sr-only">Terminal demo: running servermore deploy --prod. It detects your laptop, passes the tests on this machine, skips the container image because the container is the laptop, refuses to close 47 load-bearing browser tabs, packs the uncommitted changes, unplugs the charger, adds three layers of bubble wrap and books a courier. Then it prints a shipping label: Servermore Express, zone 1, from your desk at 127.0.0.1 to production, one laptop still warm, 4.8 kg including dependencies, courier D. Elivery, tracking number SM-4471-LOCALHOST, fragile, this side up.</p>
+      </div>
+      <div class="term-actions">
+        <button class="btn small ghost" id="term-pause" hidden>Pause</button>
+        <span>Nothing will actually be shipped. We checked.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Serverless vs. Servermore</h2>
+        <p>Every serverless function still runs on a server. Someone else's, which you can't touch. Ours runs on yours, which you can't touch either, because it's in a van.</p>
+      </div>
+      <div class="paper">
+        <table class="compare">
+          <thead><tr><td></td><th scope="col">Serverless</th><th scope="col">Servermore</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Cold starts</th><td>200 ms to a few seconds</td><td>None. The laptop is still warm from your lap.</td></tr>
+            <tr><th scope="row">Dev/prod parity</th><td>Docker, Nix and a 400-line README</td><td>100%. It is literally the same machine.</td></tr>
+            <tr><th scope="row">Debugging prod</th><td>Distributed tracing across 14 services</td><td>Ask the customer to turn the screen towards the webcam.</td></tr>
+            <tr><th scope="row">Scaling</th><td>Automatic, billed per millisecond</td><td>Buy another laptop. For vertical scaling, stack them.</td></tr>
+            <tr><th scope="row">Rollback</th><td>Redeploy the previous version</td><td>Prepaid return label in the box.</td></tr>
+            <tr><th scope="row">Edge network</th><td>300+ points of presence</td><td>On the actual edge of the customer's desk.</td></tr>
+            <tr><th scope="row">Observability</th><td>Logs, metrics, traces, dashboards</td><td>Fan noise. Louder means more traffic.</td></tr>
+            <tr><th scope="row">Uptime</th><td>99.99% SLA</td><td>Until the battery dies. Charger sold separately.</td></tr>
+            <tr><th scope="row">Secrets management</th><td>A dedicated vault with IAM policies</td><td>Sticky note on the bezel. Ships with the machine.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="contents">
+    <div class="wrap customs">
+      <div class="sec-head">
+        <h2>Everything your app depends on. Physically.</h2>
+        <p>Dependency hell exists because you only ship the code. We ship the code, the runtime, the OS, the exact version of Python you installed in 2019 and forgot about, and the 47 tabs that were open when it last worked.</p>
+      </div>
+      <div class="paper decl">
+        <div class="decl-head"><strong>Customs declaration</strong><span>Form SM-23</span></div>
+        <table>
+          <thead><tr><th scope="col">ITEM</th><th scope="col">QTY</th><th scope="col">DECLARED VALUE</th></tr></thead>
+          <tbody>
+            <tr><td>Your laptop, still warm</td><td>1</td><td>Priceless, to you</td></tr>
+            <tr><td>node_modules, printed edition</td><td>1</td><td>3.2 kg</td></tr>
+            <tr><td>Open browser tabs, load-bearing</td><td>47</td><td>Do not close</td></tr>
+            <tr><td>.env file, the real one</td><td>1</td><td>High</td></tr>
+            <tr><td>Global npm packages nobody remembers installing</td><td>212</td><td>Critical, somehow</td></tr>
+            <tr><td>Coffee ring on the lid</td><td>1</td><td>Adds character</td></tr>
+            <tr><td>Charger</td><td>0</td><td>Sold separately</td></tr>
+          </tbody>
+        </table>
+        <div class="sign">
+          <span>Sender signature</span>
+          <span class="signature">it works for me</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Track your deployment</h2>
+        <p>Every Servermore deploy comes with live tracking, so you always know which motorway your production environment is on.</p>
+      </div>
+      <ol class="track">
+        <li><span class="node">1</span><h3>Committed</h3><time>Mon 09:12</time><p>You write code. It works on your machine.</p></li>
+        <li><span class="node">2</span><h3>Picked up</h3><time>Mon 14:40</time><p>Our courier collects the machine. Please stop typing.</p></li>
+        <li><span class="node">3</span><h3>In transit</h3><time>Tue 03:15</time><p>Production is on a truck. Expect elevated latency.</p></li>
+        <li><span class="node">4</span><h3>Out for delivery</h3><time>Wed 08:02</time><p>Customer finds a desk, a power outlet and the Wi-Fi password.</p></li>
+        <li><span class="node" role="img" aria-label="Done">✓</span><h3>Delivered</h3><time>Wed 11:47</time><p>It works. It worked on your machine, and this is your machine.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Pricing per shipment</h2>
+        <p>No per-request billing, no egress fees. You pay postage. Your customer pays electricity.</p>
+      </div>
+      <div class="tiers">
+        <article class="tier">
+          <div class="t-top"><strong>Hobby</strong><span>GROUND</span></div>
+          <div class="t-body">
+            <p class="what">Your old laptop from the drawer</p>
+            <p class="price">€0 <small>+ postage</small></p>
+            <ul>
+              <li>Battery at 11%, holds for 6 minutes</li>
+              <li>Stickers of three frameworks that no longer exist</li>
+              <li>Runs one side project, very slowly</li>
+            </ul>
+          </div>
+          <div class="t-foot"><button class="btn small" data-ship>Ship my machine</button></div>
+        </article>
+        <article class="tier featured">
+          <div class="t-top"><strong>Pro</strong><span>EXPRESS</span></div>
+          <div class="t-body">
+            <p class="what">The laptop you're reading this on</p>
+            <p class="price">€49 <small>per shipment</small></p>
+            <ul>
+              <li>Includes your Spotify session, still playing</li>
+              <li>Slack notifications the customer can enjoy</li>
+              <li>Next-day delivery within the EU</li>
+            </ul>
+          </div>
+          <div class="t-foot"><button class="btn small" data-ship>Ship my machine</button></div>
+        </article>
+        <article class="tier">
+          <div class="t-top"><strong>Enterprise</strong><span>FREIGHT</span></div>
+          <div class="t-body">
+            <p class="what">Your whole desk. And you.</p>
+            <p class="price">Talk to us</p>
+            <ul>
+              <li>Desk, chair, second monitor and developer, crated</li>
+              <li>24/7 on-call, because you're physically there</li>
+              <li>Air holes included as standard</li>
+            </ul>
+          </div>
+          <div class="t-foot"><a class="btn small ghost" href="mailto:hello@serverinsteadof.cloud?subject=Please%20crate%20me">Book a crate</a></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="reviews">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>From the receiving end</h2>
+        <p>Completely made-up reviews from completely made-up customers.</p>
+      </div>
+      <div class="reviews">
+        <figure class="review"><div class="stars" role="img" aria-label="5 out of 5">★★★★★</div><blockquote>"We got a ThinkPad with a sticker that said <em>do not update</em>. We didn't. The app has worked flawlessly for eleven months."</blockquote><figcaption><b>Marta K.</b>Head of IT, a mid-size bakery</figcaption></figure>
+        <figure class="review"><div class="stars" role="img" aria-label="4 out of 5">★★★★☆</div><blockquote>"Zero cold starts, as promised. Minus one star because the laptop arrived with someone's half-written cover letter open."</blockquote><figcaption><b>Tom R.</b>CTO, a logistics startup (ironically)</figcaption></figure>
+        <figure class="review"><div class="stars" role="img" aria-label="5 out of 5">★★★★★</div><blockquote>"I shipped my machine to 40 customers. I now own no machines. My manager says this is the most stable our product has ever been."</blockquote><figcaption><b>Dave</b>Senior engineer, lid currently closed</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap faq-layout">
+      <div class="sec-head"><h2>Questions</h2></div>
+      <div class="faq">
+        <details><summary>Can I keep working while my machine is in production?</summary><p>No. We recommend getting a second machine. Once your code works on that one, we'll ship it too.</p></details>
+        <details><summary>How do I ship a hotfix?</summary><p>Write the fix on your new machine, then we ship that machine and the customer returns the old one. Zero-downtime deploys require the customer to own two desks.</p></details>
+        <details><summary>Does it scale to a million users?</summary><p>Yes, with a million laptops. Volume discounts start at 500 units, and our warehouse partners have been briefed.</p></details>
+        <details><summary>Is it GDPR compliant?</summary><p>Your data never leaves your machine. Your machine leaves you. Our lawyers are still deciding which of those matters.</p></details>
+        <details><summary>What about Kubernetes?</summary><p>We ship the cluster as well. It's three Raspberry Pis held together with packing tape. They work on our machine.</p></details>
+        <details><summary>What happened to Dave's laptop?</summary><p>Dave closed the lid to go to lunch. Production slept with it. We've added a sticky note that says "don't" and we consider the incident resolved.</p></details>
+        <details><summary>Is this real?</summary><p>About as real as your staging environment. Please don't actually post us your laptop.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <h2>Stop deploying code.<br>Start deploying hardware.</h2>
+      <p>Your code already works on your machine. The rest is logistics.</p>
+      <button class="btn" data-ship>Ship my machine</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Servermore is a joke at serverinsteadof.cloud. No laptops were harmed or shipped.</p>
+    <p>Serverless is fine, honestly. © 2026</p>
+  </div>
+</footer>
+
+<dialog id="ship" aria-labelledby="ship-title">
+  <div class="dlg-head"><h2 id="ship-title">Ship my machine</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <div class="dlg-body" id="ship-form">
+    <p>Before the courier arrives, please confirm:</p>
+    <label><input type="checkbox" class="ack"> I understand I won't see this laptop for 3–5 business days, or ever.</label>
+    <label><input type="checkbox" class="ack"> I've closed nothing. Every open tab is part of the environment.</label>
+    <label><input type="checkbox" class="ack"> I'll stop typing when the courier puts their hand on the lid.</label>
+    <button class="btn" id="book" disabled>Book pickup</button>
+    <p class="hint">Tick all three to book a pickup.</p>
+  </div>
+  <div class="dlg-body booked" id="ship-done" tabindex="-1" hidden>
+    <p><strong>Pickup booked.</strong> Your tracking number:</p>
+    <p class="tn" id="tn" role="img"></p>
+    <p>Please close your laptop now and put it in a box. Yes, the one you're reading this on.</p>
+    <button class="btn ghost" data-close>I'd rather keep it</button>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  // ---- deploy terminal (loops while it's on screen) ----
+  var term = document.getElementById('term');
+  var pauseBtn = document.getElementById('term-pause');
+  var prompt = '<span class="p">$</span> ';
+  var cursor = '<span class="cursor"></span>';
+  var cmd = 'servermore deploy --prod';
+  var steps = [
+    ['dim','Detecting environment… MacBook Pro (yours), 14", 3 stickers'],
+    ['','Running tests… <span class="ok">passed</span> <span class="dim">(on this machine)</span>'],
+    ['','Building container image… <span class="dim">skipped: the container is the laptop</span>'],
+    ['','Closing 47 browser tabs… <span class="warn">refused, tabs are load-bearing</span>'],
+    ['','Committing uncommitted changes… <span class="dim">no need, they\'re coming too</span>'],
+    ['','Unplugging charger… done'],
+    ['','Wrapping in bubble wrap… 3 layers'],
+    ['','Booking courier… <span class="ok">pickup today, 14:40</span>'],
+    ['ok','✓ Ready to ship. Printing label:']
+  ];
+  // 30 columns wide so it fits a 360px phone without wrapping
+  function row(text){ return '│ ' + text.padEnd(26) + ' │'; }
+  var rule = '─'.repeat(28);
+  var label = [
+    '┌' + rule + '┐',
+    row('SERVERMORE EXPRESS  ZONE 1'),
+    '├' + rule + '┤',
+    row('FROM  your desk, 127.0.0.1'),
+    row('TO    production'),
+    row('ITEM  1 laptop, still warm'),
+    row('WT    4.8 kg (incl. deps)'),
+    row('VIA   D. Elivery'),
+    '├' + rule + '┤',
+    row('║│║║│║│║║║│║│║║│║║║│║│║║│║'),
+    row('    SM-4471-LOCALHOST'),
+    '├' + rule + '┤',
+    row('FRAGILE · THIS SIDE UP').replace('FRAGILE', '<span class="warn">FRAGILE</span>'),
+    '└' + rule + '┘'
+  ];
+  function stepLine(s){
+    return '<span' + (s[0] ? ' class="' + s[0] + '"' : '') + '>' + (s[0] ? '' : '→ ') + s[1] + '</span>';
+  }
+  var lines = [prompt + cmd].concat(steps.map(stepLine), label);
+  var full = lines.join('\n') + '\n\n' + prompt + cursor;
+
+  // Every frame of one deploy as [html, ms to hold it]; the player loops over them.
+  var frames = [];
+  for (var c = 0; c <= cmd.length; c++) frames.push([prompt + cmd.slice(0, c) + cursor, c ? 45 : 900]);
+  frames[frames.length - 1][1] = 400;
+  for (var i = 1; i < lines.length; i++){
+    var isLabel = i > steps.length;
+    var nextIsOk = i === steps.length - 1;
+    frames.push([lines.slice(0, i + 1).join('\n') + '\n' + cursor, isLabel ? 70 : nextIsOk ? 900 : 520]);
+  }
+  frames.push([full, 6000]);
+
+  var f = 0, timer = null, onScreen = !('IntersectionObserver' in window), userPaused = false;
+  function tick(){
+    term.innerHTML = frames[f][0];
+    timer = setTimeout(function(){ f = (f + 1) % frames.length; tick(); }, frames[f][1]);
+  }
+  function update(){
+    var run = onScreen && !userPaused && !document.hidden;
+    if (run && !timer) tick();
+    if (!run && timer){ clearTimeout(timer); timer = null; }
+  }
+  // The finished output is the tallest frame; lock the terminal to it so the page doesn't jump each loop.
+  function lockHeight(){
+    var cur = term.innerHTML;
+    term.style.minHeight = '';
+    term.innerHTML = full;
+    term.style.minHeight = term.offsetHeight + 'px';
+    term.innerHTML = cur;
+  }
+  lockHeight();
+  window.addEventListener('resize', lockHeight);
+  if (document.fonts) document.fonts.ready.then(lockHeight);
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    term.innerHTML = full;
+  } else {
+    pauseBtn.hidden = false;
+    pauseBtn.addEventListener('click', function(){
+      userPaused = !userPaused;
+      pauseBtn.textContent = userPaused ? 'Resume' : 'Pause';
+      update();
+    });
+    if (!onScreen) new IntersectionObserver(function(e){ onScreen = e[0].isIntersecting; update(); }, {threshold: .3}).observe(term);
+    document.addEventListener('visibilitychange', update);
+    update();
+  }
+
+  // ---- ship dialog ----
+  var dlg = document.getElementById('ship');
+  var acks = dlg.querySelectorAll('.ack');
+  var book = document.getElementById('book');
+  var form = document.getElementById('ship-form');
+  var done = document.getElementById('ship-done');
+  function reset(){
+    acks.forEach(function(a){a.checked=false});
+    book.disabled = true; form.hidden = false; done.hidden = true;
+  }
+  document.querySelectorAll('[data-ship]').forEach(function(b){
+    b.addEventListener('click', function(){
+      reset();
+      if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
+    });
+  });
+  dlg.querySelectorAll('[data-close]').forEach(function(b){
+    b.addEventListener('click', function(){ dlg.close ? dlg.close() : dlg.removeAttribute('open'); });
+  });
+  dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
+  acks.forEach(function(a){
+    a.addEventListener('change', function(){
+      book.disabled = !Array.prototype.every.call(acks, function(x){return x.checked});
+    });
+  });
+  book.addEventListener('click', function(){
+    var n = 'SM' + Math.floor(1000 + Math.random()*9000) + 'LOCALHOST';
+    document.getElementById('tn').textContent = '*' + n + '*';
+    document.getElementById('tn').setAttribute('aria-label', 'Tracking number ' + n);
+    form.hidden = true; done.hidden = false;
+    done.focus(); // the Book button just got hidden, so don't leave focus on it
+  });
+})();
+</script>
+</body>
+</html>
